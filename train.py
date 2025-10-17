@@ -2,7 +2,7 @@
 import argparse
 import os
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '3'
+os.environ["CUDA_VISIBLE_DEVICES"] = '3' #todo 修改服务器
 from tqdm import tqdm
 import sys
 import numpy as np
@@ -15,7 +15,6 @@ from data.OxfordVelodyne_datagenerator import Oxford
 from data.QEOxfordVelodyne_datagenerator import QEOxford
 # from data.hercules import Hercules #todo 修改加载的数据类别
 from data.hercules_radar import Hercules #todo 修改加载的数据类别
-# from data.hercules_radar import Hercules
 from data.NCLTVelodyne_datagenerator import NCLT
 from models.model import SGLoc
 from models.loss import Plane_CriterionCoordinate
@@ -45,10 +44,10 @@ parser.add_argument('--optimizer', default='adam',
                     help='adam or momentum [default: adam]')
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
-parser.add_argument('--log_dir', default='radar_log_voxel0.3',
-                    help='Log dir [default: log]') #todo 修改训练和测试日志文件路径
+parser.add_argument('--log_dir', default='Mountain_radar_log_voxel0.3/',
+                    help='Log dir [default: log]') #todo 修改训练和测试日志文件路径'library_radar_log_voxel0.3_test1/' lidar_log_voxel0.3 radar_log_voxel0.3
 parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
-                    help='Our Dataset Folder')
+                    help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
 parser.add_argument('--dataset', default='Hercules',
                     help='Oxford or QEOxford or NCLT') # todo 判断用什么数据类
 parser.add_argument('--num_workers', type=int, default=4,
@@ -106,9 +105,10 @@ else:
     val_set = NCLT(**valid_kwargs)
     dataset = 'NCLT'
 
-sequence_name = 'Library' #todo 修改序列
+sequence_name = 'Mountain' #todo 修改序列和pose_stats_file ['Library', 'Mountain', 'Sports']
 # pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+ '_pose_stats.txt')
 pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
+# todo 修改修改序列和pose_stats_file
 pose_m, pose_s = np.loadtxt(pose_stats_file)
 
 collation_fn = CollationFunctionFactory(collation_type='collate_pair')
@@ -185,7 +185,7 @@ def train():
 
 def train_one_epoch(model, train_loader, scheduler, epoch, train_writer, loss, device):
     global TOTAL_ITERATIONS
-    for _, input_dict in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{FLAGS.max_epoch}", ncols=100)):
+    for _, input_dict in enumerate(tqdm(train_loader, desc=f"Epoch {epoch}/{FLAGS.max_epoch}", ncols=100)):
     # for _, input_dict in enumerate(train_loader):
         TOTAL_ITERATIONS += 1
 

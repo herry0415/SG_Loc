@@ -8,8 +8,9 @@ import time
 import torch
 import MinkowskiEngine as ME
 import matplotlib
-# from data.hercules_radar import Hercules
-from data.hercules import Hercules
+
+from data.hercules_radar import Hercules # todo 需要切换数据集
+# from data.hercules import Hercules # todo 需要切换数据集
 # The quality-enhanced Oxford dataset
 from data.QEOxfordVelodyne_datagenerator import QEOxford
 # The Oxford dataset
@@ -31,14 +32,14 @@ sys.path.append(BASE_DIR)
 cudnn.enabled = True
 torch.set_num_threads(4)
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu_id', type=int, default=0,
+parser.add_argument('--gpu_id', type=int, default=1,
                     help='gpu id for network, only effective when multi_gpus is false')
 parser.add_argument('--val_batch_size', type=int, default=30,
                     help='Batch Size during validating [default: 80]')
-parser.add_argument('--log_dir', default='lidar_log_voxel0.3/',
-                    help='Log dir [default: log]')
+parser.add_argument('--log_dir', default='library_radar_log_voxel0.3_test2/',
+                    help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.3/ 和 radar_log_voxel0.3
 parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
-                    help='Our Dataset Folder')
+                    help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
 parser.add_argument('--dataset', default='Hercules',
@@ -46,9 +47,10 @@ parser.add_argument('--dataset', default='Hercules',
 parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
 parser.add_argument('--voxel_size', type=float, default=0.3,
-                    help='Number of points to downsample model to')
-parser.add_argument('--resume_model', type=str, default='checkpoint_epoch50.tar',
-                    help='If present, restore checkpoint and resume training')
+                    help='Number of points to downsample model to') 
+parser.add_argument('--resume_model', type=str, default='checkpoint_epoch45.tar',
+                    help='If present, restore checkpoint and resume training') #todo 切换权重路径
+                    #todo 切换权重路径
 
 
 FLAGS = parser.parse_args()
@@ -84,7 +86,6 @@ elif FLAGS.dataset == 'QEOxford':
     dataset = 'Oxford&QEOxford'
 
 elif FLAGS.dataset == 'Hercules':
-  
     val_set = Hercules(**valid_kwargs)
     dataset = 'Herclues'
 elif FLAGS.dataset == 'NCLT':
@@ -94,8 +95,10 @@ else:
     raise ValueError("dataset error!")
 
 
-sequence_name = 'Library'
-pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+'_pose_stats.txt')
+sequence_name = 'Library' #todo 修改序列和pose_stats_file
+# pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+'_pose_stats.txt')
+pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
+# todo 修改修改序列和pose_stats_file
 pose_m, pose_s = np.loadtxt(pose_stats_file)
 
 collation_fn = CollationFunctionFactory(collation_type='collate_pair')
