@@ -92,6 +92,7 @@ class Hercules(data.Dataset):
         vo_stats = {}
         self.pcs = []
 
+        # #! 初始加载文件
         # for seq in seqs:
         #     seq_dir = os.path.join(self.data_dir, seq)
 
@@ -219,13 +220,13 @@ class Hercules(data.Dataset):
         return mapping[sequence_name][0] if train else mapping[sequence_name][1]
     
     def __getitem__(self, index):
-        #! 原始的坐标系
+        # #! 原始的坐标系
         # scan_path = self.pcs[index]
-        scan_path = self.radar_files[index]
-        # pts, extra,_ = bin_to_pcd(scan_path, sensor_type='Aeva')
-        # scan = np.hstack([pts, extra])[:,:3] #xyz baseline
-        scan = np.fromfile(scan_path, dtype=np.float32).reshape(-1, 8)[:,:3]
-        scan = np.ascontiguousarray(scan)
+        # # scan_path = self.radar_files[index]
+        # # pts, extra,_ = bin_to_pcd(scan_path, sensor_type='Aeva')
+        # # scan = np.hstack([pts, extra])[:,:3] #xyz baseline
+        # scan = np.fromfile(scan_path, dtype=np.float32).reshape(-1, 8)[:,:3]
+        # scan = np.ascontiguousarray(scan)
 
         #! 把radar转换到lidar坐标系
         radar_scan_path = self.radar_files[index]

@@ -23,6 +23,7 @@ from tensorboardX import SummaryWriter
 from torch.backends import cudnn
 from torch.utils.data import DataLoader
 
+SEQUNECE_NAME = 'Mountain' # ['Library', 'Mountain', 'Sports']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
@@ -44,7 +45,7 @@ parser.add_argument('--optimizer', default='adam',
                     help='adam or momentum [default: adam]')
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
-parser.add_argument('--log_dir', default='Mountain_radar_log_voxel0.3/',
+parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.3/',
                     help='Log dir [default: log]') #todo 修改训练和测试日志文件路径'library_radar_log_voxel0.3_test1/' lidar_log_voxel0.3 radar_log_voxel0.3
 parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
                     help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
@@ -105,7 +106,7 @@ else:
     val_set = NCLT(**valid_kwargs)
     dataset = 'NCLT'
 
-sequence_name = 'Mountain' #todo 修改序列和pose_stats_file ['Library', 'Mountain', 'Sports']
+sequence_name = SEQUNECE_NAME  #todo 修改序列和pose_stats_file ['Library', 'Mountain', 'Sports']
 # pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+ '_pose_stats.txt')
 pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
 # todo 修改修改序列和pose_stats_file

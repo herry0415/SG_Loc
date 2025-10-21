@@ -9,9 +9,12 @@ import torch
 import MinkowskiEngine as ME
 import matplotlib
 
-from data.hercules_radar import Hercules # todo 需要切换数据集
-# from data.hercules import Hercules # todo 需要切换数据集
+from data.hercules_radar import Hercules # todo 需要切换radar数据集
+# from data.hercules import Hercules # todo 需要切换lidar数据集
 # The quality-enhanced Oxford dataset
+
+SEQUNECE_NAME = 'Mountain' # ['Library', 'Mountain', 'Sports']
+
 from data.QEOxfordVelodyne_datagenerator import QEOxford
 # The Oxford dataset
 from data.OxfordVelodyne_datagenerator import Oxford
@@ -36,7 +39,7 @@ parser.add_argument('--gpu_id', type=int, default=1,
                     help='gpu id for network, only effective when multi_gpus is false')
 parser.add_argument('--val_batch_size', type=int, default=30,
                     help='Batch Size during validating [default: 80]')
-parser.add_argument('--log_dir', default='library_radar_log_voxel0.3_test2/',
+parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.3/',
                     help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.3/ 和 radar_log_voxel0.3
 parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
                     help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
@@ -95,7 +98,7 @@ else:
     raise ValueError("dataset error!")
 
 
-sequence_name = 'Library' #todo 修改序列和pose_stats_file
+sequence_name = SEQUNECE_NAME #todo 修改序列和pose_stats_file
 # pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+'_pose_stats.txt')
 pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
 # todo 修改修改序列和pose_stats_file

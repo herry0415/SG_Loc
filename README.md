@@ -1,19 +1,9 @@
 # SGLoc
-SGLoc: Scene Geometry Encoding for Outdoor LiDAR Localization
+本项目仅用于复现代码记录使用
 
-[Paper](https://openaccess.thecvf.com/content/CVPR2023/html/Li_SGLoc_Scene_Geometry_Encoding_for_Outdoor_LiDAR_Localization_CVPR_2023_paper.html) 
-[Supp](https://openaccess.thecvf.com/content/CVPR2023/supplemental/Li_SGLoc_Scene_Geometry_CVPR_2023_supplemental.pdf) 
-[Poster](https://drive.google.com/file/d/1P4D--SfRt62KJGkCW4HiYtOo6v-Mrmz2/view?usp=sharing)
-[Video](https://youtu.be/Tek6yA20N7M?feature=shared)
-
-![image](img/vis.gif)
-
-
-## Visualization
-![image](img/SGLoc.png)
 
 ## Environment
-
+项目环境类似SGLoc和DiffLoc BevDiffLoc 具体看https://github.com/herry0415/BevDiffLoc
 - python 3.8.16
 
 - pytorch 1.11.0
@@ -24,26 +14,31 @@ SGLoc: Scene Geometry Encoding for Outdoor LiDAR Localization
 source install.sh
 ```
 
-## Dataset
-
-We support the [Oxford Radar RobotCar](https://oxford-robotics-institute.github.io/radar-robotcar-dataset/datasets) and [NCLT](https://robots.engin.umich.edu/nclt/) datasets right now.
-
-We also use PQEE to enhance the Oxford and provide the corrected pose as QEOxford.
-
-The data of the Oxford, QEOxford and NCLT dataset should be organized as follows: 
-
-```
-data_root
-├── 2019-01-11-14-02-26-radar-oxford-10k
-│   ├── xxx.bin
-│   ├── xxx.bin
-├── Oxford_pose_stats.txt
-├── train_split.txt
-├── valid_split.txt
-```
-
 ## Data prepare
 We use [SPVNAS](https://github.com/mit-han-lab/spvnas) for data preprocessing (just used for training) and generate corresponding planar masks. You need to download the code for SPVNAS and run the [data_prepare.py](code/data_prepare.py) we provided within it.
+
+
+## 修改代码兼容新的数据集
+- data.hercules_lidar.py // data.hercules_radar.py 数据集类加载 
+- trainr.py  训练文件
+- test.py 测试文件
+----
+
+- [train.py](http://train.py) 所有**todo**的
+    - **数据集里面hercules_radar.py和hercules.py 的里面的sequence**
+    - **服务器id**
+    - 导入包要选的radar、lidar
+    - **日志文件夹的路径**
+    - **序列名 sequence_name**
+    - 位姿stats 文件**pose_stats_file  radar和lidar不同**
+- [test.py](http://test.py) 所有**todo**的
+    - **hercules_radar.py 和 hercules.py** 的里面的sequence
+    - **服务器id**
+    - 导入包要选的radar、lidar
+    - **日志文件夹的路径**
+    - 加载**第几轮**的权重**resume_model**
+    - 序列名 **sequence_name**
+    - 位姿stats 文件**pose_stats_file  radar和lidar不同**
 
 ## Run
 
@@ -51,12 +46,13 @@ We use [SPVNAS](https://github.com/mit-han-lab/spvnas) for data preprocessing (j
 ```
 python train.py --dataset_folder xxx
 ```
+- 同类型radar切换只用该序列名+服务器id号码 
 
 ### test
 ```
 python test.py --dataset_folder xxx --resume_model checkpoint_epoch_xxx.pth
 ```
-
+- 同类型radar切换只用该序列名+服务器id号码+权重轮次
 ## Model zoo
 
 The models of SGLoc on Oxford, QEOxford, and NCLT can be downloaded [here](https://drive.google.com/drive/folders/1FWoNDEsqqwnXmo1iSNmiGlcT0Ox2DM6f?usp=sharing).
