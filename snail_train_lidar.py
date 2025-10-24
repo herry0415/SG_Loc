@@ -1,9 +1,10 @@
 # pylint: disable=no-member
 import argparse
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '3' #todo 修改服务器
+os.environ["CUDA_VISIBLE_DEVICES"] = '2' #todo 修改服务器
 from tqdm import tqdm
 import sys
+import datetime
 import numpy as np
 import random
 import torch
@@ -13,6 +14,7 @@ from data.OxfordVelodyne_datagenerator import Oxford
 from data.QEOxfordVelodyne_datagenerator import QEOxford
 # from data.hercules import Hercules #todo 修改加载的数据类别
 from data.hercules_radar import Hercules #todo 修改加载的数据类别
+from data.snail import Snail #todo 修改加载的数据类别
 from data.NCLTVelodyne_datagenerator import NCLT
 from models.model import SGLoc
 from models.loss import Plane_CriterionCoordinate
@@ -21,7 +23,7 @@ from tensorboardX import SummaryWriter
 from torch.backends import cudnn
 from torch.utils.data import DataLoader
 
-SEQUNECE_NAME = 'Mountain' # ['Library', 'Mountain', 'Sports']
+SEQUNECE_NAME = 'if' # ['if', 'iaf', 'Sports']
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
@@ -29,30 +31,30 @@ cudnn.enabled = True
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu_id', type=int, default=0,
                     help='gpu id for network')
-parser.add_argument('--batch_size', type=int, default=30,
-                    help='Oxford 35 NCLT 30')
+parser.add_argument('--batch_size', type=int, default=24,
+                    help='Oxford 35 NCLT 30') #todo
 parser.add_argument('--val_batch_size', type=int, default=30,
                     help='Batch Size during validating [default: 80]')
-parser.add_argument('--max_epoch', type=int, default=51,
-                    help='Epoch to run [default: 100]')
+parser.add_argument('--max_epoch', type=int, default=100,
+                    help='Epoch to run [default: 100]') #todo
 parser.add_argument('--init_learning_rate', type=float, default=0.001,
                     help='Initial learning rate [default: 0.001]')
 parser.add_argument("--decay_step", type=float, default=1200,
-                    help="Oxford: 1200 NCLT: 1000")
+                    help="Oxford: 1200 NCLT: 1000") #todo
 parser.add_argument('--optimizer', default='adam',
                     help='adam or momentum [default: adam]')
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
-parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.3/',
+parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_lidar_log_voxel0.4/',
                     help='Log dir [default: log]') #todo 修改训练和测试日志文件路径'library_radar_log_voxel0.3_test1/' lidar_log_voxel0.3 radar_log_voxel0.3
-parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
-                    help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
-parser.add_argument('--dataset', default='Hercules',
+parser.add_argument('--dataset_folder', default='/home/data/ldq/snail-radar/',
+                    help='Our Dataset Folder') # ['if', 'iaf']
+parser.add_argument('--dataset', default='Snail',
                     help='Oxford or QEOxford or NCLT') # todo 判断用什么数据类
 parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
-parser.add_argument('--voxel_size', type=float, default=0.3,
-                    help='Oxford 0.2 NCLT: 0.25')
+parser.add_argument('--voxel_size', type=float, default=0.4,
+                    help='Oxford 0.2 NCLT: 0.25') #todo lidar和radar是否一致
 parser.add_argument('--skip_val', action='store_true', default=False,
                     help='if skip validation during training, default False')
 parser.add_argument('--resume_model', type=str, default='',
@@ -66,7 +68,11 @@ for (k, v) in args.items():
 if not os.path.exists(FLAGS.log_dir):
     os.makedirs(FLAGS.log_dir)
 
-LOG_FOUT = open(os.path.join(FLAGS.log_dir, 'log.txt'), 'w')
+
+#todo 增加时间戳
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+log_filename = f"train_{timestamp}_log.txt"
+LOG_FOUT = open(os.path.join(FLAGS.log_dir, log_filename), 'w')
 LOG_FOUT.write(str(FLAGS) + '\n')
 TOTAL_ITERATIONS = 0
 
@@ -99,14 +105,17 @@ elif FLAGS.dataset == 'QEOxford':
 elif FLAGS.dataset == 'Hercules':
     train_set = Hercules(**train_kwargs)
     val_set = Hercules(**valid_kwargs)
+elif FLAGS.dataset == 'Snail': #todo
+    train_set = Snail(**train_kwargs)
+    val_set = Snail(**valid_kwargs)
 else:
     train_set = NCLT(**train_kwargs)
     val_set = NCLT(**valid_kwargs)
     dataset = 'NCLT'
 
 sequence_name = SEQUNECE_NAME  #todo 修改序列和pose_stats_file ['Library', 'Mountain', 'Sports']
-# pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+ '_pose_stats.txt')
-pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
+pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+ '_pose_stats.txt')
+# pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
 # todo 修改修改序列和pose_stats_file
 pose_m, pose_s = np.loadtxt(pose_stats_file)
 

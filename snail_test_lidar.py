@@ -1,21 +1,19 @@
 # pylint: disable=no-member
 import argparse
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '1' #todo 修改服务器
+os.environ["CUDA_VISIBLE_DEVICES"] = '0' #todo 修改服务器
 import sys
+import datetime
+import re
 import numpy as np
 import random
 import time
 import torch
 import MinkowskiEngine as ME
 import matplotlib
-
+from data.snail import Snail # todo 需要切换radar数据集
 from data.hercules_radar import Hercules # todo 需要切换radar数据集
 # from data.hercules import Hercules # todo 需要切换lidar数据集
-
-
-SEQUNECE_NAME = 'Mountain' # ['Library', 'Mountain', 'Sports']
-
 from data.QEOxfordVelodyne_datagenerator import QEOxford
 # The Oxford dataset
 from data.OxfordVelodyne_datagenerator import Oxford
@@ -31,6 +29,10 @@ from os import path as osp
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+SEQUENCE_NAME = 'if' #['if', 'iaf']#todo
+SUB_SEQUENCE_NAME =  '20240116_eve_5'
+# if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
+# iaf  ['20231213_3', '20240113_3', '20240116_eve_4']  # test 集
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 cudnn.enabled = True
@@ -40,19 +42,19 @@ parser.add_argument('--gpu_id', type=int, default=1,
                     help='gpu id for network, only effective when multi_gpus is false')
 parser.add_argument('--val_batch_size', type=int, default=30,
                     help='Batch Size during validating [default: 80]')
-parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.3/',
-                    help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.3/ 和 radar_log_voxel0.3
-parser.add_argument('--dataset_folder', default='/home/data/ldq/HeRCULES/',
-                    help='Our Dataset Folder') # ['Library', 'Mountain', 'Sports']
+parser.add_argument('--log_dir', default=f'{SEQUENCE_NAME}_lidar_log_voxel0.4/',
+                    help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.4/ 和 radar_log_voxel0.3
+parser.add_argument('--dataset_folder', default='/home/data/ldq/snail-radar/',
+                    help='Our Dataset Folder') #todo ['if', 'iaf']
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
-parser.add_argument('--dataset', default='Hercules',
+parser.add_argument('--dataset', default='Snail',
                     help='Oxford or NCLT')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
-parser.add_argument('--voxel_size', type=float, default=0.3,
+parser.add_argument('--voxel_size', type=float, default=0.4,
                     help='Number of points to downsample model to') 
-parser.add_argument('--resume_model', type=str, default='checkpoint_epoch45.tar',
+parser.add_argument('--resume_model', type=str, default='checkpoint_epoch99.tar',
                     help='If present, restore checkpoint and resume training') #todo 切换权重路径
                     #todo 切换权重路径
 
@@ -63,8 +65,15 @@ for (k, v) in args.items():
     print('%s: %s' % (str(k), str(v)))
 if not os.path.exists(FLAGS.log_dir):
     os.makedirs(FLAGS.log_dir)
+#todo
+match = re.search(r'epoch(\d+)', os.path.basename(args['resume_model']))
+if match:
+    args['resume_epoch'] = int(match.group(1))
+else:
+    args['resume_epoch'] = None  # 或者 0，取决于你的需求
+print(f"Resuming from epoch: {args['resume_epoch']}")
 
-LOG_FOUT = open(os.path.join(FLAGS.log_dir, 'log_test.txt'), 'w')
+LOG_FOUT = open(os.path.join(FLAGS.log_dir, f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_log.txt'), 'w') #todo
 LOG_FOUT.write(str(FLAGS) + '\n')
 TOTAL_ITERATIONS = 0
 NUM = 0
@@ -88,7 +97,9 @@ if FLAGS.dataset == 'Oxford':
 elif FLAGS.dataset == 'QEOxford':
     val_set = QEOxford(**valid_kwargs)
     dataset = 'Oxford&QEOxford'
-
+elif FLAGS.dataset == 'Snail':
+    val_set = Snail(**valid_kwargs)
+    dataset = 'Snail'
 elif FLAGS.dataset == 'Hercules':
     val_set = Hercules(**valid_kwargs)
     dataset = 'Herclues'
@@ -99,9 +110,9 @@ else:
     raise ValueError("dataset error!")
 
 
-sequence_name = SEQUNECE_NAME #todo 修改序列和pose_stats_file
-# pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+'_pose_stats.txt')
-pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
+sequence_name = SEQUENCE_NAME #todo 修改序列和pose_stats_file
+pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_lidar'+'_pose_stats.txt')
+# pose_stats_file = os.path.join(FLAGS.dataset_folder, sequence_name, sequence_name + '_radar'+ '_pose_stats.txt')
 # todo 修改修改序列和pose_stats_file
 pose_m, pose_s = np.loadtxt(pose_stats_file)
 
@@ -276,7 +287,7 @@ def valid_one_epoch(model, val_loader, val_writer, device, threshold):
     plt.xlabel('x [m]')
     plt.ylabel('y [m]')
     plt.plot(gt_pose[0, 1], gt_pose[0, 0], 'y*', markersize=10)
-    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), '{:s}.png'.format('trajectory_' + str(threshold)))
+    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), f'epoch_{args["resume_epoch"]}_radar_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}.png') #todo 注意改radar/lidar
     fig.savefig(image_filename, dpi=200, bbox_inches='tight')
 
     # translation_distribution
