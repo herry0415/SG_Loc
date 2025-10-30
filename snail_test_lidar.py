@@ -30,7 +30,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 SEQUENCE_NAME = 'if' #['if', 'iaf']#todo
-SUB_SEQUENCE_NAME =  '20240116_eve_5'
+SUB_SEQUENCE_NAME =  '20240116_5'
 # if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
 # iaf  ['20231213_3', '20240113_3', '20240116_eve_4']  # test 集
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,7 +40,7 @@ torch.set_num_threads(4)
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu_id', type=int, default=1,
                     help='gpu id for network, only effective when multi_gpus is false')
-parser.add_argument('--val_batch_size', type=int, default=30,
+parser.add_argument('--val_batch_size', type=int, default=100,
                     help='Batch Size during validating [default: 80]')
 parser.add_argument('--log_dir', default=f'{SEQUENCE_NAME}_lidar_log_voxel0.4/',
                     help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.4/ 和 radar_log_voxel0.3
@@ -54,7 +54,7 @@ parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
 parser.add_argument('--voxel_size', type=float, default=0.4,
                     help='Number of points to downsample model to') 
-parser.add_argument('--resume_model', type=str, default='checkpoint_epoch99.tar',
+parser.add_argument('--resume_model', type=str, default='checkpoint_epoch80.tar',
                     help='If present, restore checkpoint and resume training') #todo 切换权重路径
                     #todo 切换权重路径
 
@@ -63,18 +63,27 @@ FLAGS = parser.parse_args()
 args = vars(FLAGS)
 for (k, v) in args.items():
     print('%s: %s' % (str(k), str(v)))
-if not os.path.exists(FLAGS.log_dir):
-    os.makedirs(FLAGS.log_dir)
+
 #todo
 match = re.search(r'epoch(\d+)', os.path.basename(args['resume_model']))
 if match:
     args['resume_epoch'] = int(match.group(1))
 else:
     args['resume_epoch'] = None  # 或者 0，取决于你的需求
+
 print(f"Resuming from epoch: {args['resume_epoch']}")
 
-LOG_FOUT = open(os.path.join(FLAGS.log_dir, f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_log.txt'), 'w') #todo
+if not os.path.exists(FLAGS.log_dir):
+    os.makedirs(FLAGS.log_dir)
+
+#todo  log文件也要放入文件夹里
+subfolder_name = f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}'
+if not os.path.exists(os.path.join(FLAGS.log_dir, subfolder_name)):
+    os.makedirs(os.path.join(FLAGS.log_dir, subfolder_name))
+
+LOG_FOUT = open(os.path.join(FLAGS.log_dir, subfolder_name, f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_log.txt'), 'w') #todo
 LOG_FOUT.write(str(FLAGS) + '\n')
+
 TOTAL_ITERATIONS = 0
 NUM = 0
 
@@ -157,6 +166,13 @@ def eval():
         model.load_state_dict(saved_state_dict)
     sys.stdout.flush()
     # for xxx in range(10):
+    #todo  新建一个文件夹
+    subfolder_name = f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}'
+    FLAGS.log_dir = os.path.join(FLAGS.log_dir, subfolder_name + '/')
+
+    if not os.path.exists(FLAGS.log_dir):
+        os.makedirs(FLAGS.log_dir)
+
     for threshold in range(14, 15, 2):
         log_string('**** THRESHOLD %01f ****' % (threshold/10))
         valid_one_epoch(model, val_loader, val_writer, device, threshold/10)
@@ -287,7 +303,7 @@ def valid_one_epoch(model, val_loader, val_writer, device, threshold):
     plt.xlabel('x [m]')
     plt.ylabel('y [m]')
     plt.plot(gt_pose[0, 1], gt_pose[0, 0], 'y*', markersize=10)
-    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), f'epoch_{args["resume_epoch"]}_radar_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}.png') #todo 注意改radar/lidar
+    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}.png') #todo 注意改radar/lidar
     fig.savefig(image_filename, dpi=200, bbox_inches='tight')
 
     # translation_distribution

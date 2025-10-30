@@ -38,13 +38,14 @@ sys.path.append(BASE_DIR)
 cudnn.enabled = True
 torch.set_num_threads(4)
 parser = argparse.ArgumentParser()
+
 parser.add_argument('--gpu_id', type=int, default=1,
                     help='gpu id for network, only effective when multi_gpus is false')
-parser.add_argument('--val_batch_size', type=int, default=30,
+parser.add_argument('--val_batch_size', type=int, default=200,
                     help='Batch Size during validating [default: 80]')
-parser.add_argument('--log_dir', default=f'{SEQUENCE_NAME}_radar_log_voxel0.3/',
+parser.add_argument('--log_dir', default=f'/data/drj/Snail_Radar_weights/SGLoc_{SEQUENCE_NAME}_Radar voxel0.2/',
                     help='Log dir [default: log]') #todo 切换train/test 路径 lidar_log_voxel0.4/ 和 radar_log_voxel0.3
-parser.add_argument('--dataset_folder', default='/home/data/ldq/snail-radar/',
+parser.add_argument('--dataset_folder', default='/data/drj/snail-radar/',
                     help='Our Dataset Folder') #todo ['if', 'iaf']
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
@@ -52,7 +53,7 @@ parser.add_argument('--dataset', default='Snail',
                     help='Oxford or NCLT')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
-parser.add_argument('--voxel_size', type=float, default=0.4,
+parser.add_argument('--voxel_size', type=float, default=0.2,
                     help='Number of points to downsample model to') 
 parser.add_argument('--resume_model', type=str, default='checkpoint_epoch99.tar',
                     help='If present, restore checkpoint and resume training') #todo 切换权重路径
@@ -73,7 +74,11 @@ else:
     args['resume_epoch'] = None  # 或者 0，取决于你的需求
 print(f"Resuming from epoch: {args['resume_epoch']}")
 
-LOG_FOUT = open(os.path.join(FLAGS.log_dir, f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_log.txt'), 'w') #todo
+subfolder_name = f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}'
+if not os.path.exists(os.path.join(FLAGS.log_dir, subfolder_name)):
+    os.makedirs(os.path.join(FLAGS.log_dir, subfolder_name))
+LOG_FOUT = open(os.path.join(FLAGS.log_dir, subfolder_name, f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_log.txt'), 'w') #todo
+
 LOG_FOUT.write(str(FLAGS) + '\n')
 TOTAL_ITERATIONS = 0
 NUM = 0
@@ -156,6 +161,10 @@ def eval():
         saved_state_dict = checkpoint['state_dict']
         model.load_state_dict(saved_state_dict)
     sys.stdout.flush()
+    #todo  新建一个文件夹
+    subfolder_name = f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}'
+    FLAGS.log_dir = os.path.join(FLAGS.log_dir, subfolder_name + '/')
+
     # for xxx in range(10):
     for threshold in range(14, 15, 2):
         log_string('**** THRESHOLD %01f ****' % (threshold/10))
@@ -287,7 +296,7 @@ def valid_one_epoch(model, val_loader, val_writer, device, threshold):
     plt.xlabel('x [m]')
     plt.ylabel('y [m]')
     plt.plot(gt_pose[0, 1], gt_pose[0, 0], 'y*', markersize=10)
-    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), f'epoch_{args["resume_epoch"]}_radar_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}.png') #todo 注意改radar/lidar
+    image_filename = os.path.join(os.path.expanduser(FLAGS.log_dir), f'epoch_{args["resume_epoch"]}_{SUB_SEQUENCE_NAME}_{SEQUENCE_NAME}.png') #todo 注意改radar/lidar
     fig.savefig(image_filename, dpi=200, bbox_inches='tight')
 
     # translation_distribution

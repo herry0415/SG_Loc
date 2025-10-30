@@ -34,7 +34,7 @@ class Snail(data.Dataset):
         self.dataset_root = data_path
         sequence_name = 'if' # todo 序列名
         self.sequence_name = sequence_name
-        self.sub_sequence_name =  '20240116_eve_5'      # if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
+        self.sub_sequence_name =  '20240116_5'      # if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
                                                     # iaf  ['20231213_3', '20240113_3', '20240116_eve_4']  # test 集
         self.augment = augment  #todo 数据增强
         self.data_dir = os.path.join(self.dataset_root, sequence_name)

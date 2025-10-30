@@ -45,7 +45,7 @@ parser.add_argument('--optimizer', default='adam',
                     help='adam or momentum [default: adam]')
 parser.add_argument('--seed', type=int, default=20, metavar='S',
                     help='random seed (default: 20)')
-parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.3/',
+parser.add_argument('--log_dir', default=f'{SEQUNECE_NAME}_radar_log_voxel0.2 epoch100/',
                     help='Log dir [default: log]') #todo 修改训练和测试日志文件路径'library_radar_log_voxel0.3_test1/' lidar_log_voxel0.3 radar_log_voxel0.3
 parser.add_argument('--dataset_folder', default='/home/data/ldq/snail-radar/',
                     help='Our Dataset Folder') # ['if', 'iaf']
@@ -53,7 +53,7 @@ parser.add_argument('--dataset', default='Snail',
                     help='Oxford or QEOxford or NCLT') # todo 判断用什么数据类
 parser.add_argument('--num_workers', type=int, default=4,
                     help='num workers for dataloader, default:4')
-parser.add_argument('--voxel_size', type=float, default=0.3,
+parser.add_argument('--voxel_size', type=float, default=0.4,
                     help='Oxford 0.2 NCLT: 0.25') #todo lidar和radar是否一致
 parser.add_argument('--skip_val', action='store_true', default=False,
                     help='if skip validation during training, default False')

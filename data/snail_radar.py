@@ -34,7 +34,7 @@ class Snail(data.Dataset):
         self.dataset_root = data_path
         sequence_name = 'if' # todo 序列名
         self.sequence_name = sequence_name
-        self.sub_sequence_name =  '20240116_eve_5'      # if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
+        self.sub_sequence_name =  '20240116_5'      # if   ['20240116_eve_5', '20240116_5', '20240123_3']  # test 集
                                                     # iaf  ['20231213_3', '20240113_3', '20240116_eve_4']  # test 集
         self.augment = augment  #todo 数据增强
         self.data_dir = os.path.join(self.dataset_root, sequence_name)
@@ -139,7 +139,7 @@ class Snail(data.Dataset):
             self.rots = np.vstack((self.rots, rotation))
             
         self.voxel_size = voxel_size
-       
+        print(f'Using voxel size: {self.voxel_size} m')
         # # data augment
         # augment_params = AugmentParams()
         # if self.augment:
@@ -213,7 +213,7 @@ class Snail(data.Dataset):
           
         # lidar_scan_gt_s8 = np.concatenate((lidar_scan, lidar_scan_gt), axis=1)
         radar_scan_gt_s8 = np.concatenate((radar_scan, radar_scan_gt), axis=1)
-       
+        print('self.voxel_size:', self.voxel_size)
         lidar_coord, lidar_feat = ME.utils.sparse_quantize(
         coordinates=radar_scan,
         features=radar_scan, #todo 用的是点
